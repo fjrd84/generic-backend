@@ -1,0 +1,25 @@
+// Fill in this file with your secret keys and rename it as auth.js
+// config/auth.js
+
+// expose our config directly to our application using module.exports
+module.exports = {
+
+	'facebookAuth' : {
+		'clientID' 		: 'clientIDHere', // your App ID
+		'clientSecret' 	: 'appSecretHere', // your App Secret
+		'callbackURL' 	: 'http://localhost:3200/auth/facebook/callback'
+	},
+
+	'twitterAuth' : {
+		'consumerKey' 		: 'your-consumer-key-here',
+		'consumerSecret' 	: 'your-client-secret-here',
+		'callbackURL' 		: 'http://localhost:3200/auth/twitter/callback'
+	},
+
+	'googleAuth' : {
+		'clientID' 		: 'clientIdHere',
+		'clientSecret' 	: 'clientSecretHere',
+		'callbackURL' 	: 'http://localhost:3200/auth/google/callback'
+	}
+
+};
