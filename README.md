@@ -11,10 +11,8 @@ It is based [in a scotch.io tutorial](https://scotch.io/tutorials/easy-node-auth
 ## Instructions
 
 - Install packages: `npm install`
-- Change out the database configuration in config/database.js
-- Change out auth keys in config/auth.js
-- Launch: `node server.js`
-- Visit in your browser at: `http://localhost:3200`
-
-
-
+- Set your own database configuration on config/database.js
+- Copy the file `config/auth.js.example` to `config/auth.js` and use your own keys
+- Launch the mongodb on the directory `./db`: `npm run startdb`
+- Launch this project: `npm run start`
+- Open `http://localhost:3200` in your browser
