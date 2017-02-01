@@ -48,7 +48,7 @@ module.exports = function (app, passport) {
 	app.get('/login', function (req, res) {
 		console.log("login view");
 		//console.log(JSON.stringify(req.user));
-		res.json({});
+        res.json({});
 		//res.render('login.ejs', { message: req.flash('loginMessage') });
 	});
 
@@ -58,7 +58,7 @@ module.exports = function (app, passport) {
 			(err, user, info) => {
 				console.log(user);
 				user.token = "asdfasdf";
-				user.save();
+//				user.save();
 				res.json({
 					id: user.id,
 					token: user.token
