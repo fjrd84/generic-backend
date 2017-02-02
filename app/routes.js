@@ -7,25 +7,25 @@ module.exports = function (app, passport) {
 	// show the home page (will also have our login links)
 	app.get('/', function (req, res) {
 		//res.render('index.ejs');
-		res.json({ view: "home" })
+		res.json({ view: "home" });
 	});
 
 	// PROFILE SECTION =========================
-	app.get('/profile', isLoggedIn, function (req, res) {
+	/*app.get('/profile', isLoggedIn, function (req, res) {
 		//res.render('profile.ejs', {
 		//			user: req.user
 		//});
 		console.log("successful login");
 		console.log(JSON.stringify(req.user));
 		res.json(req.user);
-	});
+	});*/
 
-	app.get('/profile2', (req, res, next) => {
+	app.get('/profile', (req, res, next) => {
 		let token = req.query.token;
 
 		User.findOne({ token: token }, function (err, user) {
 			if (err) { return res.status(401).json(err); }
-			if (!user) { return res.status(400).json({"message": "user not found", token: token}) }
+			if (!user) { return res.status(400).json({ "message": "user not found", token: token }) }
 			//return done(null, user, { scope: 'all' });
 			res.json(user);
 		});
@@ -42,42 +42,48 @@ module.exports = function (app, passport) {
 	// AUTHENTICATE (FIRST LOGIN) ==================================================
 	// =============================================================================
 
-	// locally --------------------------------
-	// LOGIN ===============================
-	// show the login form
-	app.get('/login', function (req, res) {
-		console.log("login view");
-		//console.log(JSON.stringify(req.user));
-        res.json({});
-		//res.render('login.ejs', { message: req.flash('loginMessage') });
-	});
-
 	// process the login form
 	app.post('/login', (req, res, next) => {
 		passport.authenticate('local-login',
 			(err, user, info) => {
+				if (!user) {
+					res.status(400).json({ message: "User not found" });
+					return;
+				}
 				console.log(user);
 				user.token = "asdfasdf";
-//				user.save();
 				res.json({
 					id: user.id,
 					token: user.token
 				});
 			})(req, res, next);
 	});
+	/*	app.post('/login', passport.authenticate('local-login', {
+		}));*/
 
 	// SIGNUP =================================
 	// show the signup form
-	app.get('/signup', function (req, res) {
+	/*app.get('/signup', function (req, res) {
 		res.render('signup.ejs', { message: req.flash('loginMessage') });
-	});
+	});*/
 
 	// process the signup form
-	app.post('/signup', passport.authenticate('local-signup', {
-		successRedirect: '/profile', // redirect to the secure profile section
-		failureRedirect: '/signup', // redirect back to the signup page if there is an error
-		failureFlash: true // allow flash messages
-	}));
+	app.post('/signup', (req, res, next) => {
+		passport.authenticate('local-signup',
+			(err, user, info) => {
+				if (!user) {
+					res.status(400).json({ message: info });
+					return;
+				}
+				console.log(user);
+				user.token = "asdfasdf";
+				res.json({
+					id: user.id,
+					token: user.token
+				});				
+				return;
+			})(req, res, next);
+	});
 
 	// facebook -------------------------------
 
