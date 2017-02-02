@@ -1,5 +1,10 @@
 // server.js
 
+/**
+ * File to bootstrap the server. It took a scotch.io tutorial as a starting point.
+ * https://scotch.io/tutorials/easy-node-authentication-setup-and-local
+ */
+
 // set up ======================================================================
 // get all the tools we need
 var express = require('express');

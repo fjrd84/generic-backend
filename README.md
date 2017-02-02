@@ -6,7 +6,7 @@ means of the passport module.
 Once the user is authenticated with one of the aforementioned strategies, he or she can link his profile to 
 his other profiles.
 
-It is based [in a scotch.io tutorial](https://scotch.io/tutorials/easy-node-authentication-setup-and-local).
+It all started with [a scotch.io tutorial](https://scotch.io/tutorials/easy-node-authentication-setup-and-local).
 
 ## Instructions
 
