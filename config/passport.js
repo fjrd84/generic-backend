@@ -5,19 +5,24 @@
  * This files configures the passport module, following these 
  * strategies:
  * - local
- * - facebook
- * - twitter
- * - google
+ * - jwt
+ * - oAuth
+ *   - facebook
+ *   - twitter
+ *   - google
  * 
  */
 
 // Import strategies
-let LocalStrategy = require('passport-local').Strategy;
-let FacebookStrategy = require('passport-facebook').Strategy;
-let TwitterStrategy = require('passport-twitter').Strategy;
-let GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+let LocalStrategy = require('passport-local').Strategy,
+    FacebookStrategy = require('passport-facebook').Strategy,
+    TwitterStrategy = require('passport-twitter').Strategy,
+    GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
+    JwtStrategy = require('passport-jwt').Strategy,
+    ExtractJwt = require('passport-jwt').ExtractJwt,
+    environment = require('./environment');
 
-// User model 
+// User model
 let User = require('../app/models/user');
 
 // Auth variables
@@ -35,24 +40,6 @@ let configAuth = require('./auth');
  */
 module.exports = function (passport) {
 
-    // =========================================================================
-    // passport session setup ==================================================
-    // =========================================================================
-    // required for persistent login sessions
-    // passport needs ability to serialize and unserialize users out of session
-
-    // used to serialize the user for the session
-    /*
-        passport.serializeUser(function (user, done) {
-            done(null, user.id);
-        });
-    
-        // used to deserialize the user
-        passport.deserializeUser(function (id, done) {
-            User.findById(id, function (err, user) {
-                done(err, user);
-            });
-        });*/
     /***********************************************************************
      *  LOCAL STRATEGY 
      ***********************************************************************/
@@ -90,6 +77,22 @@ module.exports = function (passport) {
             });
 
         }));
+
+    /**
+     * JWT Token Authentication Strategy
+     */
+    passport.use(new JwtStrategy({
+        secretOrKey: environment.secretKey,
+        jwtFromRequest: ExtractJwt.fromAuthHeader()
+    }, function (jwt_payload, done) {
+        User.findOne({ id: jwt_payload.sub }, function (err, user) {
+            if (err) {
+                return done(err, false);
+            }
+            done(null, user);
+        });
+    }));
+
     /**
      * Signup
      */
@@ -313,7 +316,7 @@ module.exports = function (passport) {
         clientSecret: configAuth.googleAuth.clientSecret,
         callbackURL: configAuth.googleAuth.callbackURL,
         passReqToCallback: true
-        
+
     },
         function (req, token, refreshToken, profile, done) {
 

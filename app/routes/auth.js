@@ -1,41 +1,8 @@
 const express = require('express'),
   router = express.Router(),
   jwt = require('jsonwebtoken'),
+  environment = require('../../config/environment'),
   User = require('../models/user');
-
-/**
- * Middleware for the JSON web token validation.
- */
-let tokenMiddleware = function (req, res, next) {
-
-  // check header or url parameters or post parameters for token
-  var token = req.body.token || req.query.token || req.headers['x-access-token'];
-
-  // decode token
-  if (token) {
-
-    // verifies secret and checks exp
-    jwt.verify(token, 'secretString', function (err, decoded) {
-      if (err) {
-        return res.status(401).json({ message: 'Failed to authenticate token.' });
-      } else {
-        // if everything is good, save to request for use in other routes
-        req.decoded = decoded;
-        next();
-      }
-    });
-
-  } else {
-
-    // if there is no token
-    // return an error
-    return res.status(403).send({
-      success: false,
-      message: 'No token provided.'
-    });
-
-  }
-};
 
 /**
  * The auth router function receives a configured passport reference
@@ -75,35 +42,20 @@ module.exports = (passport) => {
           res.status(400).json({ message: info });
           return;
         }
-
-        /**
-         *  If user is found and password is right, create a token
-         */
-        var token = jwt.sign(user, 'secretString', {
-          expiresIn: "24h"
+        let token = jwt.sign(user, environment.secretKey, {
+          expiresIn: 3600 // 1h
         });
-
-        user.token = token;
-        user.save((err) => {
-          if (err) res.send(err);
-          /**
-            * Return the information including token as JSON
-            */
-          res.json({
-            success: true,
-            id: user.id,
-            token: token
-          });
-        });
+        res.send({ user: user.id, jwtToken: token });
 
       })(req, res, next);
   });
 
-  router.get('/tokentest', tokenMiddleware, function (req, res) {
-    res.json({ message: "Your token is valid! This endpoint has been authenticated." });
-  });
-  /*  router.post('/login', passport.authenticate('local-login', {
-   }));*/
+  // Token Authentication Test
+  router.get('/tokenTest', passport.authenticate('jwt', { session: false }),
+    function (req, res) {
+      console.log(req.headers);
+      res.send('The token authentication is working.');
+    });
 
   // SIGNUP =================================
 
@@ -168,12 +120,11 @@ module.exports = (passport) => {
 
   // locally --------------------------------
   router.get('/connect/local', function (req, res) {
-    res.render('connect-local.ejs', { message: req.flash('loginMessage') });
+    res.render('connect-local.ejs', { message: 'loginMessage' });
   });
   router.post('/connect/local', passport.authenticate('local-signup', {
     successRedirect: '/profile', // redirect to the secure profile section
-    failureRedirect: '/connect/local', // redirect back to the signup page if there is an error
-    failureFlash: true // allow flash messages
+    failureRedirect: '/connect/local' // redirect back to the signup page if there is an error
   }));
 
   // facebook -------------------------------
