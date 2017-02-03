@@ -53,8 +53,7 @@ module.exports = (passport) => {
   // Token Authentication Test
   router.get('/tokenTest', passport.authenticate('jwt', { session: false }),
     function (req, res) {
-      console.log(req.headers);
-      res.send('The token authentication is working.');
+      res.json({message: 'The token authentication is working. ', user: req.user} );
     });
 
   // SIGNUP =================================
@@ -67,11 +66,12 @@ module.exports = (passport) => {
           res.status(400).json({ message: info });
           return;
         }
-        // TODO: Token from login...
-        user.token = "asdfasdf";
+        let token = jwt.sign(user, environment.secretKey, {
+          expiresIn: 3600 // 1h
+        });
         res.json({
           id: user.id,
-          token: user.token
+          token: token
         });
         return;
       })(req, res, next);
