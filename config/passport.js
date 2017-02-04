@@ -14,7 +14,7 @@
  */
 
 // Import strategies
-let LocalStrategy = require('passport-local').Strategy,
+const LocalStrategy = require('passport-local').Strategy,
     FacebookStrategy = require('passport-facebook').Strategy,
     TwitterStrategy = require('passport-twitter').Strategy,
     GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
@@ -39,6 +39,14 @@ let configAuth = require('./auth');
  * @param {any} passport
  */
 module.exports = function (passport) {
+
+    passport.serializeUser(function (user, done) {
+        done(null, user);
+    });
+
+    passport.deserializeUser(function (user, done) {
+        done(null, user);
+    });
 
     /***********************************************************************
      *  LOCAL STRATEGY 
@@ -79,27 +87,10 @@ module.exports = function (passport) {
         }));
 
     /**
-     * JWT Token Authentication Strategy
-     */
-    passport.use(new JwtStrategy({
-        secretOrKey: environment.secretKey,
-        jwtFromRequest: ExtractJwt.fromAuthHeader()
-    }, function (jwt_payload, done) {
-        User.findOne({ _id: jwt_payload._id }, function (err, user) {
-            if (err) {
-                return done(err, false);
-            }
-            done(null, user);
-        });
-    }));
-
-    /**
      * Signup
      */
     passport.use('local-signup', new LocalStrategy({
-        /**
-         * Override the username by email as the login field.
-         */
+        // Override the username by email as the login field.
         usernameField: 'email',
         passwordField: 'password',
         passReqToCallback: true
@@ -114,12 +105,12 @@ module.exports = function (passport) {
                 User.findOne({ 'local.email': email }, function (err, existingUser) {
                     if (err)
                         return done(err);
-                    /**
+                    /*
                      * Return an error when the email is already taken by another user.
                      */
                     if (existingUser)
                         return done(null, false, 'There already exists an account with that email.');
-                    /**
+                    /*
                      * When the user has already been logged in (using a different strategy),
                      * the local login for this account will be set up now.
                      */
@@ -153,6 +144,25 @@ module.exports = function (passport) {
             });
 
         }));
+
+    let tokenExtractor = (req) => {
+        return req.query.token || ExtractJwt.fromAuthHeader()(req);
+    };
+
+    /***********************************************************************
+     * JWT TOKEN STRATEGY 
+     ***********************************************************************/
+    passport.use(new JwtStrategy({
+        secretOrKey: environment.secretKey,
+        jwtFromRequest: tokenExtractor
+    }, function (jwt_payload, done) {
+        User.findOne({ _id: jwt_payload._id }, function (err, user) {
+            if (err) {
+                return done(err, false);
+            }
+            done(null, user);
+        });
+    }));
 
     /***********************************************************************
      * FACEBOOK STRATEGY
@@ -231,6 +241,8 @@ module.exports = function (passport) {
             });
 
         }));
+
+
     /***********************************************************************
      * TWITTER STRATEGY
      ***********************************************************************/
@@ -307,9 +319,9 @@ module.exports = function (passport) {
 
         }));
 
-    // =========================================================================
-    // GOOGLE ==================================================================
-    // =========================================================================
+    /***********************************************************************
+     * GOOGLE STRATEGY
+     ***********************************************************************/
     passport.use(new GoogleStrategy({
 
         clientID: configAuth.googleAuth.clientID,
@@ -364,17 +376,21 @@ module.exports = function (passport) {
 
                 } else {
                     // user already exists and is logged in, we have to link accounts
-                    let user = req.user; // pull the user out of the session
-
-                    user.google.id = profile.id;
-                    user.google.token = token;
-                    user.google.name = profile.displayName;
-                    user.google.email = profile.emails[0].value; // pull the first email
-
-                    user.save(function (err) {
+                    User.findOne({ 'id': req.user.id }, function (err, user) {
                         if (err)
-                            throw err;
-                        return done(null, user);
+                            return done(err);
+
+                        user.google = {};
+                        user.google.id = profile.id;
+                        user.google.token = token;
+                        user.google.name = profile.displayName;
+                        user.google.email = profile.emails[0].value; // pull the first email
+
+                        user.save(function (err) {
+                            if (err)
+                                throw err;
+                            return done(null, user);
+                        });
                     });
 
                 }

@@ -6,18 +6,18 @@
  */
 
 // set up ======================================================================
-var environment = require('./config/environment');
-var express = require('express');
-var app = express();
-var port = environment.port;
-var mongoose = require('mongoose');
-var passport = require('passport');
-var cors = require('cors');
-var bluebird = require('bluebird');
-
-var morgan = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+const environment = require('./config/environment'),
+  express = require('express'),
+  app = express(),
+  port = environment.port,
+  session = require('express-session'),
+  mongoose = require('mongoose'),
+  passport = require('passport'),
+  cors = require('cors'),
+  bluebird = require('bluebird'),
+  morgan = require('morgan'),
+  cookieParser = require('cookie-parser'),
+  bodyParser = require('body-parser');
 
 
 mongoose.Promise = bluebird;
@@ -37,7 +37,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.set('view engine', 'ejs'); // set up ejs for templating
 
+app.use(session({
+  secret: environment.secretKey,
+  resave: true,
+  saveUninitialized: true
+})); // persistent login sessions
 app.use(passport.initialize());
+app.use(passport.session());
+
 
 // routes ======================================================================
 require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport

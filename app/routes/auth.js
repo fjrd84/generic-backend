@@ -23,6 +23,25 @@ module.exports = (passport) => {
     });
   };
 
+
+  /***********************************************************************
+   * LOCAL STRATEGY ROUTES 
+   ***********************************************************************/
+
+  // process the login form
+  router.post('/login', (req, res, next) => {
+    passport.authenticate('local-login',
+      (err, user, info) => {
+        if (!user) {
+          res.status(400).json({ message: info });
+          return;
+        }
+
+        res.send({ user: user.id, token: generateToken(user) });
+
+      })(req, res, next);
+  });
+
   // Request profile
   router.get('/profile', passport.authenticate('jwt', { session: false }),
     function (req, res) {
@@ -37,33 +56,7 @@ module.exports = (passport) => {
     });
 
 
-  // =============================================================================
-  // AUTHENTICATE (FIRST LOGIN) ==================================================
-  // =============================================================================
-
-  // process the login form
-  router.post('/login', (req, res, next) => {
-    passport.authenticate('local-login',
-      (err, user, info) => {
-        if (!user) {
-          res.status(400).json({ message: info });
-          return;
-        }
-
-        res.send({ user: user.id, jwtToken: generateToken() });
-
-      })(req, res, next);
-  });
-
-  // Token Authentication Test
-  router.get('/tokenTest', passport.authenticate('jwt', { session: false }),
-    function (req, res) {
-      res.json({ message: 'The token authentication is working. ', user: req.user });
-    });
-
-  // SIGNUP =================================
-
-  // process the signup form
+  // Sign up
   router.post('/signup', (req, res, next) => {
     passport.authenticate('local-signup',
       (err, user, info) => {
@@ -79,12 +72,15 @@ module.exports = (passport) => {
       })(req, res, next);
   });
 
-  // google ---------------------------------
+  /***********************************************************************
+   * GOOGLE STRATEGY ROUTES 
+   ***********************************************************************/
 
   router.get('/google/callback', (req, res, next) => {
-
+    // After a successful login, an auth token is generated and retrieved to 
+    // the client app.
     passport.authenticate('google', (err, user, info) => {
-      res.redirect(environment.clientAuth + generateToken(user))
+      res.redirect(environment.clientAuth + generateToken(user));
     })(req, res, next);
 
   });
@@ -95,12 +91,6 @@ module.exports = (passport) => {
       scope: ['profile', 'email']
     }));
 
-  // the callback after google has authenticated the user
-  router.get('/google/callback2',
-    passport.authenticate('google', {
-      successRedirect: '/profile',
-      failureRedirect: '/'
-    }));
 
   // facebook -------------------------------
 
@@ -166,16 +156,26 @@ module.exports = (passport) => {
 
 
   // google ---------------------------------
-
   // send to google to do the authentication
-  router.get('/connect/google', passport.authorize('google', { scope: ['profile', 'email'] }));
+  router.get('/connect/google', passport.authenticate('jwt', { session: true }), passport.authorize('google', { scope: ['profile', 'email'] }));
+
+  //router.get('/connect/google', passport.authorize('google', { scope: ['profile', 'email'] }));
 
   // the callback after google has authorized the user
-  router.get('/connect/google/callback',
+  /*router.get('/connect/google/callback',
     passport.authorize('google', {
       successRedirect: '/profile',
       failureRedirect: '/'
-    }));
+    }));*/
+
+  router.get('/connect/google/callback', (req, res, next) => {
+    // After a successful login, an auth token is generated and retrieved to 
+    // the client app.
+    passport.authenticate('google', (err, user, info) => {
+      res.redirect(environment.clientAuth + generateToken(user));
+    })(req, res, next);
+
+  });
 
   // =============================================================================
   // UNLINK ACCOUNTS =============================================================
