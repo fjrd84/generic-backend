@@ -6,9 +6,10 @@
  */
 
 // set up ======================================================================
+var environment = require('./config/environment');
 var express = require('express');
 var app = express();
-var port = process.env.PORT || 3200;
+var port = environment.port;
 var mongoose = require('mongoose');
 var passport = require('passport');
 var cors = require('cors');
@@ -18,7 +19,6 @@ var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var environment = require('./config/environment');
 
 mongoose.Promise = bluebird;
 

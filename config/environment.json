@@ -1,5 +1,6 @@
 {
     "secretKey": "thisIsTheSecretKey",
     "db": "mongodb://127.0.0.1:27017/mydb",
-    "tokenValidityTime": 604800
+    "tokenValidityTime": 604800,
+    "port": 3200
 }
