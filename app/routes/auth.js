@@ -43,7 +43,7 @@ module.exports = (passport) => {
           return;
         }
         let token = jwt.sign(user.toObject(), environment.secretKey, {
-          expiresIn: 3600 // 1h
+          expiresIn: environment.tokenValidityTime
         });
         res.send({ user: user.id, jwtToken: token });
 
@@ -67,7 +67,7 @@ module.exports = (passport) => {
           return;
         }
         let token = jwt.sign(user.toObject(), environment.secretKey, {
-          expiresIn: 3600 // 1h
+          expiresIn: environment.tokenValidityTime
         });
         res.json({
           id: user.id,
