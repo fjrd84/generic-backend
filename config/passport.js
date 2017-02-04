@@ -97,7 +97,7 @@ module.exports = function (passport) {
     },
         function (req, email, password, done) {
 
-            // Let the machine do its stuff and continue when the stack is free again. 
+            // Async: let the machine do its stuff and continue when the stack is free again. 
             process.nextTick(function () {
 
                 //  Whether we're signing up or connecting an account, we'll need

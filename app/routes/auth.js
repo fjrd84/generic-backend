@@ -71,10 +71,22 @@ module.exports = (passport) => {
   });
 
   // Connect (when already logged in using a different strategy).
-  router.post('/connect/local', passport.authenticate('local-signup', {
-    successRedirect: '/profile', // redirect to the secure profile section
-    failureRedirect: '/connect/local' // redirect back to the signup page if there is an error
-  }));
+  router.post('/connect/local',
+    passport.authenticate('jwt', { session: false }),
+    (req, res, next) => {
+      passport.authenticate('local-signup',
+        (err, user, info) => {
+          if (!user) {
+            res.status(400).json({ message: info });
+            return;
+          }
+          res.json({
+            id: user.id,
+            token: generateToken(user)
+          });
+          return;
+        })(req, res, next);
+    });
 
   /***********************************************************************
    * GOOGLE STRATEGY ROUTES 
