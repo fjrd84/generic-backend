@@ -1,8 +1,7 @@
 const express = require('express'),
   router = express.Router(),
   jwt = require('jsonwebtoken'),
-  environment = require('../../config/environment'),
-  User = require('../models/user');
+  environment = require('../../config/environment');
 
 /**
  * The auth router function receives a configured passport reference
@@ -55,7 +54,6 @@ module.exports = (passport) => {
       res.json({ message: "Logged out" });
     });
 
-
   // Sign up
   router.post('/signup', (req, res, next) => {
     passport.authenticate('local-signup',
@@ -71,6 +69,12 @@ module.exports = (passport) => {
         return;
       })(req, res, next);
   });
+
+  // Connect (when already logged in using a different strategy).
+  router.post('/connect/local', passport.authenticate('local-signup', {
+    successRedirect: '/profile', // redirect to the secure profile section
+    failureRedirect: '/connect/local' // redirect back to the signup page if there is an error
+  }));
 
   /***********************************************************************
    * GOOGLE STRATEGY ROUTES 
@@ -91,83 +95,12 @@ module.exports = (passport) => {
       scope: ['profile', 'email']
     }));
 
-
-  // facebook -------------------------------
-
-  // send to facebook to do the authentication
-  router.get('/facebook', passport.authenticate('facebook', { scope: 'email' }));
-
-  // handle the callback after facebook has authenticated the user
-  router.get('/facebook/callback',
-    passport.authenticate('facebook', {
-      successRedirect: '/profile',
-      failureRedirect: '/'
-    }));
-
-  // twitter --------------------------------
-
-  // send to twitter to do the authentication
-  router.get('/twitter', passport.authenticate('twitter', { scope: 'email' }));
-
-  // handle the callback after twitter has authenticated the user
-  router.get('/twitter/callback',
-    passport.authenticate('twitter', {
-      successRedirect: '/profile',
-      failureRedirect: '/'
-    }));
-
-
-  // =============================================================================
-  // AUTHORIZE (ALREADY LOGGED IN / CONNECTING OTHER SOCIAL ACCOUNT) =============
-  // =============================================================================
-
-  // locally --------------------------------
-  router.get('/connect/local', function (req, res) {
-    res.render('connect-local.ejs', { message: 'loginMessage' });
-  });
-  router.post('/connect/local', passport.authenticate('local-signup', {
-    successRedirect: '/profile', // redirect to the secure profile section
-    failureRedirect: '/connect/local' // redirect back to the signup page if there is an error
-  }));
-
-  // facebook -------------------------------
-
-  // send to facebook to do the authentication
-  router.get('/connect/facebook', passport.authorize('facebook', { scope: 'email' }));
-
-  // handle the callback after facebook has authorized the user
-  router.get('/connect/facebook/callback',
-    passport.authorize('facebook', {
-      successRedirect: '/profile',
-      failureRedirect: '/'
-    }));
-
-  // twitter --------------------------------
-
-  // send to twitter to do the authentication
-  router.get('/connect/twitter', passport.authorize('twitter', { scope: 'email' }));
-
-  // handle the callback after twitter has authorized the user
-  router.get('/connect/twitter/callback',
-    passport.authorize('twitter', {
-      successRedirect: '/profile',
-      failureRedirect: '/'
-    }));
-
-
-  // google ---------------------------------
-  // send to google to do the authentication
+  // Google connect. In this case, a session must be kept for us to know
+  // which was the user once google redirects to the callback after the
+  // authorization.
   router.get('/connect/google', passport.authenticate('jwt', { session: true }), passport.authorize('google', { scope: ['profile', 'email'] }));
 
-  //router.get('/connect/google', passport.authorize('google', { scope: ['profile', 'email'] }));
-
-  // the callback after google has authorized the user
-  /*router.get('/connect/google/callback',
-    passport.authorize('google', {
-      successRedirect: '/profile',
-      failureRedirect: '/'
-    }));*/
-
+  // Google connect callback
   router.get('/connect/google/callback', (req, res, next) => {
     // After a successful login, an auth token is generated and retrieved to 
     // the client app.
@@ -177,24 +110,43 @@ module.exports = (passport) => {
 
   });
 
-  // =============================================================================
-  // UNLINK ACCOUNTS =============================================================
-  // =============================================================================
-  // used to unlink accounts. for social accounts, just remove the token
-  // for local account, remove email and password
-  // user account will stay active in case they want to reconnect in the future
-
-  // local -----------------------------------
-  router.get('/unlink/local', function (req, res) {
-    var user = req.user;
-    user.local.email = undefined;
-    user.local.password = undefined;
-    user.save(function (err) {
-      res.redirect('/profile');
+  // Unlink google from the current profile
+  router.get('/unlink/google',
+    passport.authenticate('jwt', { session: false }),
+    function (req, res) {
+      var user = req.user;
+      user.google.token = undefined;
+      user.save(function (err) {
+        res.json({ message: "success" });
+      });
     });
-  });
 
-  // facebook -------------------------------
+
+  /***********************************************************************
+   * FACEBOOK STRATEGY ROUTES 
+   ***********************************************************************/
+
+  // Send to facebook to do the authentication
+  router.get('/facebook', passport.authenticate('facebook', { scope: 'email' }));
+
+  // Handle the callback after facebook has authenticated the user
+  router.get('/facebook/callback',
+    passport.authenticate('facebook', {
+      successRedirect: '/profile',
+      failureRedirect: '/'
+    }));
+
+  // Send to facebook to do the authentication
+  router.get('/connect/facebook', passport.authorize('facebook', { scope: 'email' }));
+
+  // Handle the callback after facebook has authorized the user
+  router.get('/connect/facebook/callback',
+    passport.authorize('facebook', {
+      successRedirect: '/profile',
+      failureRedirect: '/'
+    }));
+
+  // Unlink facebook
   router.get('/unlink/facebook', function (req, res) {
     var user = req.user;
     user.facebook.token = undefined;
@@ -203,7 +155,31 @@ module.exports = (passport) => {
     });
   });
 
-  // twitter --------------------------------
+  /***********************************************************************
+   *  TWITTER STRATEGY ROUTES 
+   ************************************************************************/
+
+  // Send to twitter to do the authentication
+  router.get('/connect/twitter', passport.authorize('twitter', { scope: 'email' }));
+
+  // Handle the callback after twitter has authorized the user
+  router.get('/connect/twitter/callback',
+    passport.authorize('twitter', {
+      successRedirect: '/profile',
+      failureRedirect: '/'
+    }));
+
+  // Send to twitter to do the authentication
+  router.get('/twitter', passport.authenticate('twitter', { scope: 'email' }));
+
+  // Handle the callback after twitter has authenticated the user
+  router.get('/twitter/callback',
+    passport.authenticate('twitter', {
+      successRedirect: '/profile',
+      failureRedirect: '/'
+    }));
+
+  // Unlink twitter
   router.get('/unlink/twitter', function (req, res) {
     var user = req.user;
     user.twitter.token = undefined;
@@ -212,15 +188,6 @@ module.exports = (passport) => {
     });
   });
 
-  // google ---------------------------------
-  router.get('/unlink/google', function (req, res) {
-    var user = req.user;
-    user.google.token = undefined;
-    user.save(function (err) {
-      res.redirect('/profile');
-    });
-  });
-
+  // The auth routes have been configured. Return them now.
   return router;
-
 };
