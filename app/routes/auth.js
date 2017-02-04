@@ -12,23 +12,30 @@ const express = require('express'),
  */
 module.exports = (passport) => {
 
-  router.get('/profile', (req, res, next) => {
-    let token = req.query.token;
 
-    User.findOne({ token: token }, function (err, user) {
-      if (err) { return res.status(401).json(err); }
-      if (!user) { return res.status(400).json({ "message": "user not found", token: token }) }
-      //return done(null, user, { scope: 'all' });
-      res.json(user);
+  /**
+   * Utility for generating a JWT token and binding it to a user.
+   * @param {any} user
+   */
+  let generateToken = (user) => {
+    return jwt.sign(user.toObject(), environment.secretKey, {
+      expiresIn: environment.tokenValidityTime
     });
-  });
+  };
 
+  // Request profile
+  router.get('/profile', passport.authenticate('jwt', { session: false }),
+    function (req, res) {
+      res.json({ user: req.user });
+    });
 
-  // LOGOUT ==============================
-  router.get('/logout', function (req, res) {
-    req.logout();
-    res.redirect('/');
-  });
+  // Log out
+  router.get('/logout', passport.authenticate('jwt', { session: false }),
+    function (req, res) {
+      req.logout();
+      res.json({ message: "Logged out" });
+    });
+
 
   // =============================================================================
   // AUTHENTICATE (FIRST LOGIN) ==================================================
@@ -42,10 +49,8 @@ module.exports = (passport) => {
           res.status(400).json({ message: info });
           return;
         }
-        let token = jwt.sign(user.toObject(), environment.secretKey, {
-          expiresIn: environment.tokenValidityTime
-        });
-        res.send({ user: user.id, jwtToken: token });
+
+        res.send({ user: user.id, jwtToken: generateToken() });
 
       })(req, res, next);
   });
@@ -53,7 +58,7 @@ module.exports = (passport) => {
   // Token Authentication Test
   router.get('/tokenTest', passport.authenticate('jwt', { session: false }),
     function (req, res) {
-      res.json({message: 'The token authentication is working. ', user: req.user} );
+      res.json({ message: 'The token authentication is working. ', user: req.user });
     });
 
   // SIGNUP =================================
@@ -66,16 +71,36 @@ module.exports = (passport) => {
           res.status(400).json({ message: info });
           return;
         }
-        let token = jwt.sign(user.toObject(), environment.secretKey, {
-          expiresIn: environment.tokenValidityTime
-        });
         res.json({
           id: user.id,
-          token: token
+          token: generateToken(user)
         });
         return;
       })(req, res, next);
   });
+
+  // google ---------------------------------
+
+  router.get('/google/callback', (req, res, next) => {
+
+    passport.authenticate('google', (err, user, info) => {
+      res.redirect(environment.clientAuth + generateToken(user))
+    })(req, res, next);
+
+  });
+
+  // send to google to do the authentication
+  router.get('/google', passport.authenticate('google',
+    {
+      scope: ['profile', 'email']
+    }));
+
+  // the callback after google has authenticated the user
+  router.get('/google/callback2',
+    passport.authenticate('google', {
+      successRedirect: '/profile',
+      failureRedirect: '/'
+    }));
 
   // facebook -------------------------------
 
@@ -101,18 +126,6 @@ module.exports = (passport) => {
       failureRedirect: '/'
     }));
 
-
-  // google ---------------------------------
-
-  // send to google to do the authentication
-  router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-  // the callback after google has authenticated the user
-  router.get('/google/callback',
-    passport.authenticate('google', {
-      successRedirect: '/profile',
-      failureRedirect: '/'
-    }));
 
   // =============================================================================
   // AUTHORIZE (ALREADY LOGGED IN / CONNECTING OTHER SOCIAL ACCOUNT) =============

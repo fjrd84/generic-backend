@@ -2,5 +2,6 @@
     "secretKey": "thisIsTheSecretKey",
     "db": "mongodb://127.0.0.1:27017/mydb",
     "tokenValidityTime": 604800,
+    "clientAuth": "http://localhost:4200/auth/",
     "port": 3200
 }
