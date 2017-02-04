@@ -88,6 +88,7 @@ module.exports = (passport) => {
         })(req, res, next);
     });
 
+
   /***********************************************************************
    * GOOGLE STRATEGY ROUTES 
    ***********************************************************************/
@@ -129,6 +130,7 @@ module.exports = (passport) => {
       var user = req.user;
       user.google.token = undefined;
       user.save(function (err) {
+        if(err) return res.json({error: err});
         res.json({ message: "success" });
       });
     });
@@ -163,9 +165,11 @@ module.exports = (passport) => {
     var user = req.user;
     user.facebook.token = undefined;
     user.save(function (err) {
+      if(err) return res.json({error: err});
       res.redirect('/profile');
     });
   });
+
 
   /***********************************************************************
    *  TWITTER STRATEGY ROUTES 
@@ -196,6 +200,7 @@ module.exports = (passport) => {
     var user = req.user;
     user.twitter.token = undefined;
     user.save(function (err) {
+      if(err) return res.json({error: err});
       res.redirect('/profile');
     });
   });
