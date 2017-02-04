@@ -42,7 +42,7 @@ module.exports = (passport) => {
           res.status(400).json({ message: info });
           return;
         }
-        let token = jwt.sign(user, environment.secretKey, {
+        let token = jwt.sign(user.toObject(), environment.secretKey, {
           expiresIn: 3600 // 1h
         });
         res.send({ user: user.id, jwtToken: token });
@@ -66,7 +66,7 @@ module.exports = (passport) => {
           res.status(400).json({ message: info });
           return;
         }
-        let token = jwt.sign(user, environment.secretKey, {
+        let token = jwt.sign(user.toObject(), environment.secretKey, {
           expiresIn: 3600 // 1h
         });
         res.json({

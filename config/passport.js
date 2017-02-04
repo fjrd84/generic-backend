@@ -85,8 +85,7 @@ module.exports = function (passport) {
         secretOrKey: environment.secretKey,
         jwtFromRequest: ExtractJwt.fromAuthHeader()
     }, function (jwt_payload, done) {
-        let id = jwt_payload._doc._id;
-        User.findOne({ _id: id }, function (err, user) {            
+        User.findOne({ _id: jwt_payload._id }, function (err, user) {            
             if (err) {
                 return done(err, false);
             }
