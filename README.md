@@ -2,13 +2,18 @@
 
 # NodeJS Backend with Authentication
 
-This project lets a user authenticate locally, or with Facebook, Twitter and Google by using oAuth, by 
-means of the passport module.
+Express/NodeJS REST API server designed to work as a backend for its Angular 2 based [generic-frontend](https://github.com/fjrd84/generic-frontend) counterpart.
 
-Once the user is authenticated with one of the aforementioned strategies, he or she can link his profile to 
-his other profiles.
+The main features so far are:
 
-It all started with [a scotch.io tutorial](https://scotch.io/tutorials/easy-node-authentication-setup-and-local).
+- User login using different strategies (initially based on [a scotch.io tutorial](https://scotch.io/tutorials/easy-node-authentication-setup-and-local)).
+  * Local (email/password)
+  * Google (oAuth)
+  * Twitter (oAuth)
+  * Facebook (oAuth)
+- Link and unlink user accounts to the aforementioned authentication strategies.
+
+
 
 ## Instructions
 
