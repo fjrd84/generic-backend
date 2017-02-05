@@ -1,4 +1,4 @@
-[![Coverage Status](https://coveralls.io/repos/github/fjrd84/generic-backend/badge.svg?branch=master)](https://coveralls.io/github/fjrd84/generic-backend?branch=master)
+[![Build Status](https://travis-ci.org/fjrd84/generic-backend.svg?branch=master)](https://travis-ci.org/fjrd84/generic-backend) [![Coverage Status](https://coveralls.io/repos/github/fjrd84/generic-backend/badge.svg?branch=master)](https://coveralls.io/github/fjrd84/generic-backend?branch=master)
 
 # NodeJS Backend with Authentication
 
