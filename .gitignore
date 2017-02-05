@@ -11,10 +11,13 @@ db/*
 pids
 logs
 results
+coverage
 
 npm-debug.log
 node_modules
 .vscode
+
+.coveralls.yml
 
 config/secretDatabase.js
 config/auth.js

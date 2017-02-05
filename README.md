@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/fjrd84/generic-backend/badge.svg?branch=master)](https://coveralls.io/github/fjrd84/generic-backend?branch=master)
+
 # NodeJS Backend with Authentication
 
 This project lets a user authenticate locally, or with Facebook, Twitter and Google by using oAuth, by 

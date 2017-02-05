@@ -4,11 +4,16 @@
   "scripts": {
     "start": "node server.js",
     "startdb": "mongod --dbpath ./db",
-    "test": "NODE_ENV=test mocha *-spec.js --recursive --watch"
+    "test": "NODE_ENV=test mocha *-spec.js --recursive --watch",
+    "coverage": "NODE_ENV=test istanbul cover _mocha -- *spec.js",
+    "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
+    "coveralls": "^2.11.15",
+    "istanbul": "^0.4.5",
     "jshint": "^2.9.4",
-    "mocha": "^1.17.1",
+    "mocha": "^1.21.5",
     "supertest": "^3.0.0"
   },
   "dependencies": {
