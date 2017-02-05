@@ -25,7 +25,13 @@ mongoose.Promise = bluebird;
 app.use(cors());
 
 // configuration ===============================================================
-mongoose.connect(environment.db); // DB connection 
+mongoose.connect(environment.db, function(err, res) {
+  if(err) {
+    console.log('Error connecting to the database. ' + err);
+  } else {
+    console.log('Connected to Database: ' + environment.db);
+  }
+});
 
 require('./config/passport')(passport); // pass passport for configuration
 
