@@ -14,25 +14,20 @@ describe('Requests to the auth path', function () {
       chai.request(app)
         .get('/auth/profile')
         .end((err, res) => {
-          
-          //expect(err.text).to.equal("Unauthorized");
-          expect(res).to.have.status(401);
+          expect(res.status).to.equal(401);
+          expect(res.error.text).to.equal("Unauthorized");
           done();
         });
     });
 
   it('POST /auth/login -> Unauthorized', function (done) {
-    done();
-    /*    chai.request(app)
-          .post('/auth/login', {
-            email: "fake@fake.com",
-            password: "nopass"
-          })
-          .expect(400)
-          .end((err, res) => {
-            console.log(res.body);
-            assert(body.message);
-            done();
-          });*/
+    chai.request(app)
+      .post('/auth/login')
+      .field("email", "fake@fake.com")
+      .field("password", "nopass")
+      .end((err, res) => {
+        expect(res.body.message.message).to.equal("Missing credentials");
+        done();
+      });
   });
 });
