@@ -25,9 +25,6 @@ const LocalStrategy = require('passport-local').Strategy,
 // User model
 let User = require('../app/models/user');
 
-// Auth variables
-let configAuth = require('./auth');
-
 /**
  * A function will be returned, that takes passport as a parameter.
  * When invoked, this function sets up the passport configuration.
@@ -168,9 +165,9 @@ module.exports = function (passport) {
      * FACEBOOK STRATEGY
      ***********************************************************************/
     passport.use(new FacebookStrategy({
-        clientID: configAuth.facebookAuth.clientID,
-        clientSecret: configAuth.facebookAuth.clientSecret,
-        callbackURL: configAuth.facebookAuth.callbackURL,
+        clientID: environment.auth.facebookAuth.clientID,
+        clientSecret: environment.auth.facebookAuth.clientSecret,
+        callbackURL: environment.auth.facebookAuth.callbackURL,
         passReqToCallback: true
     },
         function (req, token, refreshToken, profile, done) {
@@ -247,9 +244,9 @@ module.exports = function (passport) {
      * TWITTER STRATEGY
      ***********************************************************************/
     passport.use(new TwitterStrategy({
-        consumerKey: configAuth.twitterAuth.consumerKey,
-        consumerSecret: configAuth.twitterAuth.consumerSecret,
-        callbackURL: configAuth.twitterAuth.callbackURL,
+        consumerKey: environment.auth.twitterAuth.consumerKey,
+        consumerSecret: environment.auth.twitterAuth.consumerSecret,
+        callbackURL: environment.auth.twitterAuth.callbackURL,
         passReqToCallback: true
     },
         function (req, token, tokenSecret, profile, done) {
@@ -324,9 +321,9 @@ module.exports = function (passport) {
      ***********************************************************************/
     passport.use(new GoogleStrategy({
 
-        clientID: configAuth.googleAuth.clientID,
-        clientSecret: configAuth.googleAuth.clientSecret,
-        callbackURL: configAuth.googleAuth.callbackURL,
+        clientID: environment.auth.googleAuth.clientID,
+        clientSecret: environment.auth.googleAuth.clientSecret,
+        callbackURL: environment.auth.googleAuth.callbackURL,
         passReqToCallback: true
 
     },

@@ -13,7 +13,7 @@ switch (process.env.NODE_ENV) {
     currentEnvironment = Object.assign({}, environment, environmentTest);
     break;
   default:
-    currentEnvironment = environment;
+    currentEnvironment = Object.assign({}, environment, { auth: require('./auth.js') });
 }
 
 module.exports = currentEnvironment;
