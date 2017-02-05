@@ -4,7 +4,7 @@
   "scripts": {
     "start": "node server.js",
     "startdb": "mongod --dbpath ./db",
-    "test": "mocha *-spec.js --recursive --watch"
+    "test": "NODE_ENV=test mocha *-spec.js --recursive --watch"
   },
   "devDependencies": {
     "jshint": "^2.9.4",

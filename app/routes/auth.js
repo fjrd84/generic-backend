@@ -35,9 +35,7 @@ module.exports = (passport) => {
           res.status(400).json({ message: info });
           return;
         }
-
         res.send({ user: user.id, token: generateToken(user) });
-
       })(req, res, next);
   });
 
@@ -161,7 +159,6 @@ module.exports = (passport) => {
         res.status(400).json({ message: info });
         return;
       }
-
       res.redirect(environment.clientAuth + generateToken(user));
     })(req, res, next);
   });
