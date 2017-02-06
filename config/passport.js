@@ -31,11 +31,6 @@ let User = require('../app/models/user');
  * When invoked, this function sets up the passport configuration.
  * @param {any} passport module
  */
-/**
- * 
- * 
- * @param {any} passport
- */
 module.exports = function (passport) {
 
     passport.serializeUser(function (user, done) {
