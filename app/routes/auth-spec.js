@@ -27,7 +27,7 @@ describe('Requests to the auth path', function () {
     });
   });
 
-  it('GET /auth/profile without token: Unauthorized',
+  it('should unauthorize a GET /auth/profile without token',
     function (done) {
       chai.request(app)
         .get('/auth/profile')
@@ -38,7 +38,7 @@ describe('Requests to the auth path', function () {
         });
     });
 
-  it('POST /auth/login with fake data: Unauthorized', function (done) {
+  it('should unauthorize a POST /auth/login with fake data', function (done) {
     chai.request(app)
       .post('/auth/login')
       .send({ email: "fake@fake.com", password: "fakepass" })
@@ -48,14 +48,60 @@ describe('Requests to the auth path', function () {
       });
   });
 
-  it('POST /auth/signup creates a new user', (done) => {
+  it('should POST /auth/signup to create a new user, but not twice', (done) => {
+    let userInfo = { email: "testuser@testdomain.com", password: "s3cr3t" };
     chai.request(app)
       .post('/auth/signup')
-      .send({ email: "testuser@testdomain.com", password: "s3cr3t" })
-      .end((err, res) => {
+      .send(userInfo)
+      .then((res) => {
         expect(res.body.token).to.exist;
-        done();
+        // After a successful sign up, the same email 
+        // shouldn't be allowed to sign up as a new user 
+        chai.request(app)
+          .post('/auth/signup')
+          .send(userInfo)
+          .end((err, res) => {
+            expect(res.body.message).to.equal("There already exists an account with that email.");
+            done();
+          });
       });
   });
+
+  it('should POST /auth/signup to creates a new user and then log in with POST /auth/login', (done) => {
+    let userInfo = { email: "testuser@testdomain.com", password: "s3cr3t" };
+    chai.request(app)
+      .post('/auth/signup')
+      .send(userInfo)
+      .then((res) => {
+        expect(res.body.token).to.exist;
+        chai.request(app)
+          .post('/auth/login')
+          .send(userInfo)
+          .end((err, res) => {
+            expect(res.body.token).to.exist;
+            done();
+          });
+      });
+  });
+
+  it('should POST /auth/signup to create a new user and then retrieve the user profile on GET /auth/profile using the auth token as an Authorization header', (done) => {
+    let userInfo = { email: "testuser@testdomain.com", password: "s3cr3t" };
+    chai.request(app)
+      .post('/auth/signup')
+      .send(userInfo)
+      .then((res) => {
+        expect(res.body.token).to.exist;
+        let authToken = res.body.token;
+        chai.request(app)
+          .get('/auth/profile')
+          .set('Authorization', 'JWT ' + authToken)
+          .send(userInfo)
+          .end((err, res) => {
+            expect(res.body.user._id).to.exist;
+            done();
+          });
+      });
+  });
+
 
 });
