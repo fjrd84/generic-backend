@@ -95,7 +95,6 @@ describe('Requests to the auth path', function () {
         chai.request(app)
           .get('/auth/profile')
           .set('Authorization', 'JWT ' + authToken)
-          .send(userInfo)
           .end((err, res) => {
             expect(res.body.user._id).to.exist;
             done();
@@ -103,5 +102,28 @@ describe('Requests to the auth path', function () {
       });
   });
 
+  it('should POST /auth/signup to create a new user and then logout GET /auth/logout', (done) => {
+    let userInfo = { email: "testuser@testdomain.com", password: "s3cr3t" };
+    let authToken;
+    chai.request(app)
+      .post('/auth/signup')
+      .send(userInfo)
+      .then((res) => {
+        expect(res.body.token).to.exist;
+        authToken = res.body.token;
+        chai.request(app)
+          .post('/auth/login')
+          .send(userInfo)
+          .then(( res) => {
+            chai.request(app)
+              .get("/auth/logout")
+              .set('Authorization', 'JWT ' + authToken)
+              .end((err, res) => {
+                expect(res.body.message).to.equal("Logged out");
+                done();
+              })
+          });
+      });
+  });
 
 });
