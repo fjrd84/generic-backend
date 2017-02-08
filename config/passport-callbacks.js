@@ -45,19 +45,17 @@ module.exports = {
               throw err;
             return done(null, user);
           });
+          return;
         }
         //  We're not logged in, so we're creating a brand new user.
-        else {
-          let newUser = new User();
-          newUser.local.email = email;
-          newUser.local.password = newUser.generateHash(password);
-          newUser.save(function (err) {
-            if (err)
-              throw err;
-            return done(null, newUser);
-          });
-        }
-
+        let newUser = new User();
+        newUser.local.email = email;
+        newUser.local.password = newUser.generateHash(password);
+        newUser.save(function (err) {
+          if (err)
+            throw err;
+          return done(null, newUser);
+        });
       });
     });
   },
@@ -91,10 +89,10 @@ module.exports = {
                 user.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
                 user.facebook.email = profile.emails[0].value;
 
+                // The user will be updated and saved again.
                 user.save(function (err) {
                   if (err)
                     throw err;
-                  return done(null, user);
                 });
               }
 
@@ -113,26 +111,27 @@ module.exports = {
                   throw err;
                 return done(null, newUser);
               });
+              return;
             }
           });
-
-      } else {
-        /**
-         * The user already exists and is logged in, we have to link accounts.
-         */
-        let user = req.user; // pull the user out of the session
-
-        user.facebook.id = profile.id;
-        user.facebook.token = token;
-        user.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
-        user.facebook.email = profile.emails[0].value;
-
-        user.save(function (err) {
-          if (err)
-            throw err;
-          return done(null, user);
-        });
+        return;
       }
+      /**
+       * The user already exists and is logged in, we have to link accounts.
+       */
+      let user = req.user; // pull the user out of the session
+
+      user.facebook.id = profile.id;
+      user.facebook.token = token;
+      user.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
+      user.facebook.email = profile.emails[0].value;
+
+      user.save(function (err) {
+        if (err)
+          throw err;
+        return done(null, user);
+      });
+
     });
   },
   twitter: function (req, token, tokenSecret, profile, done) {
@@ -160,7 +159,7 @@ module.exports = {
               user.save(function (err) {
                 if (err)
                   throw err;
-                return done(null, user);
+                return;
               });
             }
 
@@ -181,22 +180,21 @@ module.exports = {
             });
           }
         });
-
-      } else {
-        // user already exists and is logged in, we have to link accounts
-        let user = req.user; // pull the user out of the session
-
-        user.twitter.id = profile.id;
-        user.twitter.token = token;
-        user.twitter.username = profile.username;
-        user.twitter.displayName = profile.displayName;
-
-        user.save(function (err) {
-          if (err)
-            throw err;
-          return done(null, user);
-        });
+        return;
       }
+      // user already exists and is logged in, we have to link accounts
+      let user = req.user; // pull the user out of the session
+
+      user.twitter.id = profile.id;
+      user.twitter.token = token;
+      user.twitter.username = profile.username;
+      user.twitter.displayName = profile.displayName;
+
+      user.save(function (err) {
+        if (err)
+          throw err;
+        return done(null, user);
+      });
 
     });
 
@@ -224,48 +222,47 @@ module.exports = {
               user.save(function (err) {
                 if (err)
                   throw err;
-                return done(null, user);
+                return;
               });
             }
 
-            return done(null, user);
-          } else {
-            let newUser = new User();
-
-            newUser.google.id = profile.id;
-            newUser.google.token = token;
-            newUser.google.name = profile.displayName;
-            newUser.google.email = profile.emails[0].value; // pull the first email
-
-            newUser.save(function (err) {
-              if (err)
-                throw err;
-              return done(null, newUser);
-            });
+            return done(null, user); // Here is where the user must be returned.
           }
-        });
+          let newUser = new User();
 
-      } else {
-        // user already exists and is logged in, we have to link accounts
-        User.findOne({ 'id': req.user.id }, function (err, user) {
-          if (err)
-            return done(err);
+          newUser.google.id = profile.id;
+          newUser.google.token = token;
+          newUser.google.name = profile.displayName;
+          newUser.google.email = profile.emails[0].value; // pull the first email
 
-          user.google = {};
-          user.google.id = profile.id;
-          user.google.token = token;
-          user.google.name = profile.displayName;
-          user.google.email = profile.emails[0].value; // pull the first email
-
-          user.save(function (err) {
+          newUser.save(function (err) {
             if (err)
               throw err;
-            return done(null, user);
+            return done(null, newUser);
           });
+
         });
-
+        return;
       }
+      // user already exists and is logged in, we have to link accounts
+      /*      User.findOne({ 'id': req.user.id }, function (err, user) {
+              if (err)
+                return done(err);*/
 
+      let user = req.user;
+
+      user.google = {};
+      user.google.id = profile.id;
+      user.google.token = token;
+      user.google.name = profile.displayName;
+      user.google.email = profile.emails[0].value; // pull the first email
+
+      user.save(function (err) {
+        if (err)
+          throw err;
+        return done(null, user);
+      });
     });
+    //});
   }
 };

@@ -5,7 +5,6 @@ const chai = require('chai'),
 
 describe('passport callbacks', () => {
 
-  let exampleUser = { local: { email: "mruser@company.com" } };
 
   beforeEach('empty the users collection', (done) => {
     User.remove({}, () => {
@@ -38,6 +37,7 @@ describe('passport callbacks', () => {
 
   it('should validate the user password using a local strategy',
     (done) => {
+      let exampleUser = { local: { email: "mruser@company.com" } };
       let newUser = new User(exampleUser);
       newUser.local.password = newUser.generateHash("passw0rd");
       newUser.save(() => {
@@ -51,6 +51,7 @@ describe('passport callbacks', () => {
 
   it('should reject a wrong password using a local strategy',
     (done) => {
+      let exampleUser = { local: { email: "mruser@company.com" } };
       let newUser = new User(exampleUser);
       newUser.local.password = newUser.generateHash("passw0rd");
       newUser.save(() => {
@@ -64,7 +65,7 @@ describe('passport callbacks', () => {
   it('should sign in a new user',
     (done) => {
       let email = "mrproper@limpio.com",
-          password = "cl3aning4ll";
+        password = "cl3aning4ll";
 
       passportCallbacks.localSignup({}, email, password, (err, user) => {
         expect(user).to.be.an('object');
@@ -74,4 +75,124 @@ describe('passport callbacks', () => {
         done();
       });
     });
+
+  it('should create a local login for a user that has already logged in by using a different strategy', (done) => {
+    let req = {},
+      exampleUser = { facebook: { id: "asdf", token: "asdf", email: "whocares@email.com", name: "Mr. Nobody" } },
+      email = "mrberbedere@nicetest.com", // Emails might be different in different strategies.
+      password = "supers3cret";
+    let newUser = new User(exampleUser);
+    req.user = newUser;
+    newUser.save(() => {
+      passportCallbacks.localSignup(req, email, password, (err, user) => {
+        expect(user._doc.local.email).to.be.equal(email);
+        expect(user.validPassword(password)).to.be.true;
+        done();
+      });
+
+    });
+
+  });
+
+  it('should create a new user with the facebook strategy', (done) => {
+    let facebookProfile = {
+      id: "userId",
+      name: { givenName: "Billy", familyName: "Boy" },
+      emails: [{ value: "billy@boy.com" }]
+    };
+    passportCallbacks.facebook({}, "fbtokensecret", "fbrefreshtoken", facebookProfile, (err, user) => {
+      expect(user._doc.facebook.name).to.equal("Billy Boy");
+      expect(user._doc.facebook.email).to.equal("billy@boy.com");
+      done();
+    });
+  });
+
+  it('should connect a local user with the facebook strategy', (done) => {
+    let exampleUser = { local: { email: "whatever@asdf.com", password: "doesn'tevenmatter" } };
+    let facebookProfile = {
+      id: "userId",
+      name: { givenName: "Billy", familyName: "Boy" },
+      emails: [{ value: "billy@boy.com" }]
+    };
+    let newUser = new User(exampleUser);
+    let req = { user: newUser };
+    newUser.save(() => {
+      passportCallbacks.facebook(req, "fbtokensecret", "fbrefreshtoken", facebookProfile, (err, user) => {
+        expect(user._doc.facebook.name).to.equal("Billy Boy");
+        expect(user._doc.facebook.email).to.equal("billy@boy.com");
+        done();
+
+      });
+    });
+  });
+
+  it('should connect a local user with the facebook strategy to a user that was previously unlinked from facebook', (done) => {
+    let exampleUser = { local: { email: "whatever@asdf.com", password: "doesn'tevenmatter" }, facebook: { id: "userId" } };
+    let facebookProfile = {
+      id: "userId",
+      name: { givenName: "Billy", familyName: "Boy" },
+      emails: [{ value: "billy@boy.com" }]
+    };
+    let newUser = new User(exampleUser);
+    newUser.save(() => {
+      passportCallbacks.facebook({}, "fbtokensecret", "fbrefreshtoken", facebookProfile, (err, user) => {
+        expect(user._doc.facebook.name).to.equal("Billy Boy");
+        expect(user._doc.facebook.email).to.equal("billy@boy.com");
+        done();
+
+      });
+    });
+  });
+
+
+  it('should create a new user with the google strategy', (done) => {
+    let googleProfile = {
+      id: "userId",
+      displayName: "Billy Boy",
+      emails: [{ value: "billy@boy.com" }]
+    };
+    passportCallbacks.google({}, "ggtokensecret", "ggrefreshtoken", googleProfile, (err, user) => {
+      expect(user._doc.google.name).to.equal("Billy Boy");
+      expect(user._doc.google.email).to.equal("billy@boy.com");
+      done();
+    });
+  });
+
+
+  it('should connect a local user with the google strategy', (done) => {
+    let exampleUser = { local: { email: "whatever@asdf.com", password: "doesn'tevenmatter" } };
+    let googleProfile = {
+      id: "userId",
+      displayName: "Billy Boy",
+      emails: [{ value: "billy@boy.com" }]
+    };
+    let newUser = new User(exampleUser);
+    let req = { user: newUser };
+    newUser.save(() => {
+      passportCallbacks.google(req, "ggtokensecret", "ggrefreshtoken", googleProfile, (err, user) => {
+        expect(user._doc.google.name).to.equal("Billy Boy");
+        expect(user._doc.google.email).to.equal("billy@boy.com");
+        done();
+      });
+    });
+  });
+
+  it('should connect a local user with the google strategy to a user that was previously unlinked from google', (done) => {
+    let exampleUser = { local: { email: "whatever@asdf.com", password: "doesn'tevenmatter" }, google: { id: "userId" } };
+    let googleProfile = {
+      id: "userId",
+      displayName: "Billy Boy",
+      emails: [{ value: "billy@boy.com" }]
+    };
+    let newUser = new User(exampleUser);
+    newUser.save(() => {
+      passportCallbacks.google({}, "ggtokensecret", "ggrefreshtoken", googleProfile, (err, user) => {
+        expect(user._doc.google.name).to.equal("Billy Boy");
+        expect(user._doc.google.email).to.equal("billy@boy.com");
+        done();
+      });
+    });
+  });
+
+
 });
