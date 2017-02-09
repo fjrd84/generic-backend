@@ -194,5 +194,55 @@ describe('passport callbacks', () => {
     });
   });
 
+  ///
+
+  it('should create a new user with the twitter strategy', (done) => {
+    let twitterProfile = {
+      id: "billyBoyId",
+      username: "billyBoy",
+      displayName: "Billy Boy",
+    };
+    passportCallbacks.twitter({}, "twttoken", "twttokensecret", twitterProfile, (err, user) => {
+      expect(user._doc.twitter.displayName).to.equal("Billy Boy");
+      expect(user._doc.twitter.username).to.equal("billyBoy");
+      done();
+    });
+  });
+
+
+  it('should connect a local user with the twitter strategy', (done) => {
+    let exampleUser = { local: { email: "whatever@asdf.com", password: "doesn'tevenmatter" } };
+    let twitterProfile = {
+      id: "billyBoyId",
+      username: "billyBoy",
+      displayName: "Billy Boy",
+    };
+    let newUser = new User(exampleUser);
+    let req = { user: newUser };
+    newUser.save(() => {
+      passportCallbacks.twitter(req, "twttoken", "twttokensecret", twitterProfile, (err, user) => {
+        expect(user._doc.twitter.displayName).to.equal("Billy Boy");
+        expect(user._doc.twitter.username).to.equal("billyBoy");
+        done();
+      });
+    });
+  });
+
+  it('should connect a local user with the twitter strategy to a user that was previously unlinked from twitter', (done) => {
+    let exampleUser = { local: { email: "whatever@asdf.com", password: "doesn'tevenmatter" }, twitter: { id: "userId" } };
+    let twitterProfile = {
+      id: "billyBoyId",
+      username: "billyBoy",
+      displayName: "Billy Boy",
+    };
+    let newUser = new User(exampleUser);
+    newUser.save(() => {
+      passportCallbacks.twitter({}, "twttoken", "twttokensecret", twitterProfile, (err, user) => {
+        expect(user._doc.twitter.displayName).to.equal("Billy Boy");
+        expect(user._doc.twitter.username).to.equal("billyBoy");
+        done();
+      });
+    });
+  });
 
 });
