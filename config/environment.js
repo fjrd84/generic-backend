@@ -2,6 +2,14 @@ const environment = require('./environment.json'),
   environmentTest = require('./environment-test.json'),
   environmentDebug = require('./environment-debug.json');
 
+let auth;
+// Auth might not be defined in the test context
+try {
+  auth = require('./auth');
+} catch (err){
+  auth = {};
+}
+
 let currentEnvironment;
 
 /*
@@ -17,7 +25,7 @@ switch (process.env.NODE_ENV) {
     currentEnvironment = Object.assign({}, environment, environmentTest, environmentDebug);
     break;
   default:
-    currentEnvironment = Object.assign({}, environment, { auth: require('./auth.js') });
+    currentEnvironment = Object.assign({}, environment, { auth: auth });
 }
 
 module.exports = currentEnvironment;
