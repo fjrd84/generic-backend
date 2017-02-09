@@ -1,6 +1,5 @@
 const chai = require('chai'),
-  expect = chai.expect,
-  request = require('supertest');
+  expect = chai.expect;
 
 describe('Different environments are loaded depending on the NODE_ENV environment variable', () => {
   let initialEnv;
