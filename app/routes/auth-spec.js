@@ -1,28 +1,27 @@
+/* jshint expr: true */
 const chai = require('chai'),
   expect = chai.expect,
+  request = require('supertest'),
+  sinon = require('sinon'),
   chaiHttp = require('chai-http'),
+  passport = require('passport'),
   app = require('../../server'),
-  User = require('../models/user'),
-  environment = require('../../config/environment'),
-  mongoose = require('mongoose');
+  User = require('../models/user');
 
 chai.use(chaiHttp);
 
 describe('Requests to the auth path', function () {
 
   beforeEach(function (done) {
-    if (!mongoose.connection.db) {
-      mongoose.connect(environment.db, done);
-    }
     // Make sure that there are no users in the collection before starting testing
-    User.remove({}, function (err) {
+    User.remove({}, function () {
       done();
     });
   });
 
   afterEach((done) => {
     // Clean the users collection after each test.
-    User.remove({}, function (err) {
+    User.remove({}, function () {
       done();
     });
   });
@@ -114,16 +113,39 @@ describe('Requests to the auth path', function () {
         chai.request(app)
           .post('/auth/login')
           .send(userInfo)
-          .then(( res) => {
+          .then(() => {
             chai.request(app)
               .get("/auth/logout")
               .set('Authorization', 'JWT ' + authToken)
               .end((err, res) => {
                 expect(res.body.message).to.equal("Logged out");
                 done();
-              })
+              });
           });
       });
+  });
+
+  it('should redirect to the auth route of the client after successfully authenticating using the google strategy', (done) => {
+    let stub = sinon.stub(passport, 'authenticate');
+
+    stub.yields(
+      null,
+      {
+        toObject: () => {
+          return { id: "michaelKnight" };
+        }
+      },
+      "Extra Info"
+    );
+
+    request(app)
+      .get('/auth/google/callback')
+      .end((err, res) => {
+        expect(res.header['location']).to.contain('/auth');
+        stub.restore();
+        done();
+      });
+
   });
 
 });
