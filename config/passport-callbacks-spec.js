@@ -1,3 +1,4 @@
+/* jshint expr: true */
 const chai = require('chai'),
   expect = chai.expect,
   User = require('../app/models/user.js'),
