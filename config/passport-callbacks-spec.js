@@ -20,12 +20,12 @@ describe('passport callbacks', () => {
   });
 
   it('should contain a callback for each strategy', (done) => {
-    expect(passportCallbacks.localLogin).to.exist;
-    expect(passportCallbacks.localSignup).to.exist;
-    expect(passportCallbacks.tokenCb).to.exist;
-    expect(passportCallbacks.facebook).to.exist;
-    expect(passportCallbacks.google).to.exist;
-    expect(passportCallbacks.twitter).to.exist;
+    expect(passportCallbacks.localLogin).to.be.a('function');
+    expect(passportCallbacks.localSignup).to.be.a('function');
+    expect(passportCallbacks.tokenCb).to.be.a('function');
+    expect(passportCallbacks.facebook).to.be.a('function');
+    expect(passportCallbacks.google).to.be.a('function');
+    expect(passportCallbacks.twitter).to.be.a('function');
     done();
   });
 
