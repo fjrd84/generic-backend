@@ -103,8 +103,8 @@ module.exports = {
 
               newUser.facebook.id = profile.id;
               newUser.facebook.token = token;
-              newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
-              newUser.facebook.email = profile.emails[0].value;
+              newUser.facebook.name = profile.displayName;
+              newUser.facebook.email = profile.emails ? profile.emails[0].value : "";
 
               newUser.save(function (err) {
                 if (err)
@@ -245,24 +245,20 @@ module.exports = {
         return;
       }
       // user already exists and is logged in, we have to link accounts
-      /*      User.findOne({ 'id': req.user.id }, function (err, user) {
-              if (err)
-                return done(err);*/
+      User.findOne({ 'id': req.user.id }, (err, user) => {
+        if (err) return done(err);
 
-      let user = req.user;
-
-      user.google = {};
-      user.google.id = profile.id;
-      user.google.token = token;
-      user.google.name = profile.displayName;
-      user.google.email = profile.emails[0].value; // pull the first email
-
-      user.save(function (err) {
-        if (err)
-          throw err;
-        return done(null, user);
+        user.google = {};
+        user.google.id = profile.id;
+        user.google.token = token;
+        user.google.name = profile.displayName;
+        user.google.email = profile.emails[0].value; // pull the first email
+        user.save(function (err) {
+          if (err)
+            throw err;
+          return done(null, user);
+        });
       });
     });
-    //});
   }
 };

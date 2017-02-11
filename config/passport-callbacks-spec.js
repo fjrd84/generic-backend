@@ -98,7 +98,7 @@ describe('passport callbacks', () => {
   it('should create a new user with the facebook strategy', (done) => {
     let facebookProfile = {
       id: "userId",
-      name: { givenName: "Billy", familyName: "Boy" },
+      displayName: "Billy Boy",
       emails: [{ value: "billy@boy.com" }]
     };
     passportCallbacks.facebook({}, "fbtokensecret", "fbrefreshtoken", facebookProfile, (err, user) => {
@@ -167,15 +167,15 @@ describe('passport callbacks', () => {
       displayName: "Billy Boy",
       emails: [{ value: "billy@boy.com" }]
     };
-    let newUser = new User(exampleUser);
-    let req = { user: newUser };
-    newUser.save(() => {
+    User.create(exampleUser, (err, user) => {
+      let req = { user: user.toObject() };
       passportCallbacks.google(req, "ggtokensecret", "ggrefreshtoken", googleProfile, (err, user) => {
         expect(user._doc.google.name).to.equal("Billy Boy");
         expect(user._doc.google.email).to.equal("billy@boy.com");
         done();
       });
     });
+
   });
 
   it('should connect a local user with the google strategy to a user that was previously unlinked from google', (done) => {
@@ -219,7 +219,7 @@ describe('passport callbacks', () => {
         displayName: "Billy Boy",
       };
       let newUser = new User(exampleUser);
-      let req = { };
+      let req = {};
       newUser.save(() => {
         passportCallbacks.twitter(req, "twttoken", "twttokensecret", twitterProfile, (err, user) => {
           expect(user._doc.twitter.displayName).to.equal("Billy Boy");
