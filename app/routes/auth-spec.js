@@ -230,7 +230,7 @@ describe('Requests to the auth path', function () {
 
   describe('GET /auth/twitter/callback', () => {
     it('should redirect to the auth route of the client after successfully authenticating using the twitter strategy', (done) => {
-      let stub = sinon.stub(passport, 'authenticate');
+      let stub = sinon.stub(passport, 'authenticate').returns(() => { });
 
       stub.yields(
         null,
@@ -360,7 +360,44 @@ describe('Requests to the auth path', function () {
 
   });
 
- describe('GET /auth/connect/twitter/callback', () => {
+
+  describe('GET /auth/session', () => {
+
+    it('should start a session', (done) => {
+      let newUser = { local: { email: "twitterMan@myhome.com", password: "whateverhash" } };
+      User.create(newUser, (err, user) => {
+        let token = generateToken(user);
+
+        request(app)
+          .get('/auth/session/start')
+          .set('Authorization', "JWT " + token)
+          .end((err, res) => {
+            expect(res.status).to.equal(200);
+            expect(res.body.message).to.equal("Session started.");
+            done();
+          });
+      });
+
+      it('should end a session', (done) => {
+        let newUser = { local: { email: "twitterMan@myhome.com", password: "whateverhash" } };
+        User.create(newUser, (err, user) => {
+          let token = generateToken(user);
+
+          request(app)
+            .get('/auth/session/end')
+            .set('Authorization', "JWT " + token)
+            .end((err, res) => {
+              expect(res.status).to.equal(200);
+              expect(res.body.message).to.equal("Session ended.");
+              done();
+            });
+        });
+
+      });
+    });
+  });
+
+  describe('GET /auth/connect/twitter/callback', () => {
     it('should authenticate a user when the user authentication was successful', (done) => {
       let stub = sinon.stub(passport, 'authenticate').returns(() => { }),
         dbUser = {

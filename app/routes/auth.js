@@ -229,6 +229,22 @@ module.exports = (passport) => {
       });
     });
 
+  // Session routes
+  router.get('/session/start',
+    passport.authenticate('jwt', { session: true }),
+    (req, res, next) => {
+      return res.status(200).json({ message: "Session started." });
+    }
+  );
+
+  router.get('/session/end',
+    passport.authenticate('jwt', { session: false }),
+    (req, res, next) => {
+      return res.status(200).json({ message: "Session ended." });
+    }
+  );
+
+
   // The auth routes have been configured. Return them now.
   return router;
 };
