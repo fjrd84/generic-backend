@@ -126,8 +126,8 @@ module.exports = (passport) => {
       var user = req.user;
       user.google.token = undefined;
       user.save((err) => {
-        if (err) return res.json({ error: err });
-        res.json({ message: "success" });
+        if (err) return res.status(500).json({ error: err });
+        res.status(204).json({ message: "success" });
       });
     });
 
@@ -174,8 +174,8 @@ module.exports = (passport) => {
       var user = req.user;
       user.facebook.token = undefined;
       user.save((err) => {
-        if (err) return res.json({ error: err });
-        res.json({ message: "success" });
+        if (err) return res.status(500).json({ error: err });
+        res.status(204).json({ message: "success" });
       });
     });
 
@@ -224,8 +224,8 @@ module.exports = (passport) => {
       var user = req.user;
       user.twitter.token = undefined;
       user.save((err) => {
-        if (err) return res.json({ error: err });
-        res.json({ message: "success" });
+        if (err) return res.status(500).json({ error: err });
+        res.status(204).json({ message: "success" });
       });
     });
 
