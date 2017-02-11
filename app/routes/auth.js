@@ -1,6 +1,6 @@
 const express = require('express'),
   router = express.Router(),
-  jwt = require('jsonwebtoken'),
+  generateToken = require('../tools/generate-token'),
   environment = require('../../config/environment');
 
 /**
@@ -10,18 +10,6 @@ const express = require('express'),
  * @returns {any} a router instance
  */
 module.exports = (passport) => {
-
-
-  /**
-   * Utility for generating a JWT token and binding it to a user.
-   * @param {any} user
-   */
-  let generateToken = (user) => {
-    return jwt.sign(user.toObject(), environment.secretKey, {
-      expiresIn: environment.tokenValidityTime
-    });
-  };
-
 
   /***********************************************************************
    * LOCAL STRATEGY ROUTES 
