@@ -6,7 +6,8 @@ const chai = require('chai'),
   chaiHttp = require('chai-http'),
   passport = require('passport'),
   app = require('../../server'),
-  User = require('../models/user');
+  User = require('../models/user'),
+  generateToken = require('../tools/generate-token');
 
 chai.use(chaiHttp);
 
@@ -140,6 +141,7 @@ describe('Requests to the auth path', function () {
 
   describe('GET /auth/google/callback', () => {
     it('should redirect to the auth route of the client after successfully authenticating using the google strategy', (done) => {
+
       let stub = sinon.stub(passport, 'authenticate');
 
       stub.yields(
@@ -155,15 +157,36 @@ describe('Requests to the auth path', function () {
       request(app)
         .get('/auth/google/callback')
         .end((err, res) => {
-          expect(res.header['location']).to.contain('/auth');
           stub.restore();
+          expect(res.header['location']).to.contain('/auth');
           done();
         });
     });
+
+    it('should return an error message when after authenticating using the google strategy no user has been found', (done) => {
+      let stub = sinon.stub(passport, 'authenticate').returns(function () { });
+
+      let passportErrorMessage = "The user has not been found";
+
+      stub.yields(
+        null,
+        null,
+        passportErrorMessage
+      );
+
+      request(app)
+        .get('/auth/google/callback')
+        .end((err, res) => {
+          stub.restore();
+          expect(res.body.message).to.equal(passportErrorMessage);
+          done();
+        });
+    });
+
   });
 
-  describe('GET /auth/connect/local', () => {
-    it('should connect an existing user to the local strategy', (done) => {
+  describe('GET /auth/facebook/callback', () => {
+    it('should redirect to the auth route of the client after successfully authenticating using the facebook strategy', (done) => {
       let stub = sinon.stub(passport, 'authenticate');
 
       stub.yields(
@@ -177,13 +200,127 @@ describe('Requests to the auth path', function () {
       );
 
       request(app)
-        .get('/auth/connect/local')
+        .get('/auth/facebook/callback')
         .end((err, res) => {
-
           stub.restore();
+          expect(res.header['location']).to.contain('/auth');
           done();
         });
     });
   });
+
+  describe('GET /auth/twitter/callback', () => {
+    it('should redirect to the auth route of the client after successfully authenticating using the twitter strategy', (done) => {
+      let stub = sinon.stub(passport, 'authenticate');
+
+      stub.yields(
+        null,
+        {
+          toObject: () => {
+            return { id: "michaelKnight" };
+          }
+        },
+        "Extra Info"
+      );
+
+      request(app)
+        .get('/auth/twitter/callback')
+        .end((err, res) => {
+          stub.restore();
+          expect(res.header['location']).to.contain('/auth');
+          done();
+        });
+    });
+  });
+
+  describe('GET /auth/connect/local', () => {
+    it('should connect an existing user to the local strategy', (done) => {
+      let exampleUser = { facebook: { id: "1234", token: "1234" } },
+        stub = sinon.stub(passport, 'authenticate').returns(() => { });
+
+      User.create(exampleUser, (err, userInDb) => {
+        stub.yields(
+          null,
+          userInDb,
+          null
+        );
+
+        let token = generateToken(userInDb);
+
+        chai.request(app)
+          .post('/auth/connect/local')
+          .set('Authorization', "JWT " + token)
+          .end((err, res) => {
+            stub.restore();
+            expect(res.status).to.equal(200);
+            expect(res.body.id).to.be.a('string');
+            expect(res.body.token).to.be.a('string');
+            done();
+          });
+      });
+    });
+
+    it('should return an error when no connecting user has been found in the db', (done) => {
+      let exampleUser = { facebook: { id: "1234", token: "1234" } },
+        stub = sinon.stub(passport, 'authenticate').returns(() => { }),
+        passportErrorMessage = "Error: user not found";
+
+      User.create(exampleUser, (err, userInDb) => {
+        stub.yields(
+          null,
+          null,
+          passportErrorMessage
+        );
+
+        let token = generateToken(userInDb);
+
+        chai.request(app)
+          .post('/auth/connect/local')
+          .set('Authorization', "JWT " + token)
+          .end((err, res) => {
+            stub.restore();
+            expect(res.status).to.equal(400);
+            expect(res.body.message).to.equal(passportErrorMessage);
+            done();
+          });
+      });
+    });
+  });
+
+  describe('GET /auth/connect/google/callback', () => {
+    it('should authenticate a user when the user authentication was successful', (done) => {
+      let stub = sinon.stub(passport, 'authenticate').returns(() => { }),
+        dbUser = {
+          toObject: () => {
+            return { id: 'someUsersId' };
+          }
+        };
+      stub.yields(null, dbUser, null);
+      request(app)
+        .get('/auth/connect/google/callback')
+        .end((err, res) => {
+          stub.restore();
+          expect(res.header['location']).to.contain('/auth');
+          done();
+        });
+    });
+
+    it('should return an error message when the user couldn\'t be authenticated', (done) => {
+      let stub = sinon.stub(passport, 'authenticate').returns(() => { }),
+        passportErrorMessage = "Some error message";
+
+      stub.yields(null, null, passportErrorMessage);
+      chai.request(app)
+        .get('/auth/connect/google/callback')
+        .end((err, res) => {
+          stub.restore();
+          expect(res.body.message).to.equal(passportErrorMessage);
+          done();
+        });
+    });
+
+  });
+
+  //describe('GET /unlink/google')
 
 });
