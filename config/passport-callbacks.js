@@ -2,12 +2,23 @@
 let User = require('../app/models/user');
 
 module.exports = {
+  /**
+   * @function tokenCb - Token strategy callback 
+   * Called after verifying a tokens validity. The user's id will be
+   * specified into the token's payload.
+   * @param {any} jwt_payload
+   * @param {any} done
+   */
+  tokenCb: function (jwt_payload, done) {
+    User.findOne({ _id: jwt_payload._id }, function (err, user) {
+      done(err, user);
+    });
+  },
   localLogin: (req, email, password, done) => {
-    // Let the machine do its stuff and continue when the stack is free again. 
+    // Async: let the machine do its stuff. 
     process.nextTick(function () {
       User.findOne({ 'local.email': email }, function (err, user) {
-        if (err)
-          return done(err);
+        if (err) return done(err);
         // If no user is found, return the message
         if (!user)
           return done(null, false, 'No user has been found.');
@@ -20,18 +31,18 @@ module.exports = {
     });
   },
   localSignup: function (req, email, password, done) {
-    // Async: let the machine do its stuff and continue when the stack is free again. 
+    // Async: let the machine do its stuff. 
     process.nextTick(function () {
       //  Whether we're signing up or connecting an account, we'll need
       //  to know if the email address is in use.
       User.findOne({ 'local.email': email }, function (err, existingUser) {
-        if (err)
-          return done(err);
+        if (err) return done(err);
         /*
          * Return an error when the email is already taken by another user.
          */
-        if (existingUser)
+        if (existingUser) {
           return done(null, false, 'There already exists an account with that email.');
+        }
         /*
          * When the user has already been logged in (using a different strategy),
          * the local login for this account will be set up now.
@@ -59,48 +70,30 @@ module.exports = {
       });
     });
   },
-  tokenCb: function (jwt_payload, done) {
-    User.findOne({ _id: jwt_payload._id }, function (err, user) {
-      if (err) {
-        return done(err, false);
-      }
-      done(null, user);
-    });
-  },
   facebook: function (req, token, refreshToken, profile, done) {
-
-    // Async: let the machine do its stuff and continue when the stack is free again. 
+    // Async: let the machine do its stuff. 
     process.nextTick(function () {
-
       // check if the user is already logged in
       if (!req.user) {
-
         User.findOne({ 'facebook.id': profile.id },
           function (err, user) {
-            if (err)
-              return done(err);
-
+            if (err) return done(err);
+            // If there is a user id already but no token 
+            // (user was linked at one point and then removed)
             if (user) {
-
-              // If there is a user id already but no token 
-              // (user was linked at one point and then removed)
               if (!user.facebook.token) {
                 user.facebook.token = token;
                 user.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
                 user.facebook.email = profile.emails[0].value;
-
                 // The user will be updated and saved again.
                 user.save(function (err) {
-                  if (err)
-                    throw err;
+                  if (err) throw err;
                 });
               }
-
               return done(null, user); // user found, return that user
             } else {
               // If there is no user, create it now. 
               let newUser = new User();
-
               newUser.facebook.id = profile.id;
               newUser.facebook.token = token;
               newUser.facebook.name = profile.displayName;
@@ -135,22 +128,17 @@ module.exports = {
     });
   },
   twitter: function (req, token, tokenSecret, profile, done) {
-
-    // Asynchronous
+    // Async: let the machine do its stuff. 
     process.nextTick(function () {
-
       // Check if the user is already logged in
       if (!req.user) {
-
         User.findOne({ 'twitter.id': profile.id }, function (err, user) {
-          if (err)
-            return done(err);
-
+          if (err) return done(err);
+          /**
+           * If there is a user id already but no token (user 
+           * was linked at one point and then removed)
+           */
           if (user) {
-            /**
-             * If there is a user id already but no token (user 
-             * was linked at one point and then removed)
-             */
             if (!user.twitter.token) {
               user.twitter.token = token;
               user.twitter.username = profile.username;
@@ -197,35 +185,27 @@ module.exports = {
       });
 
     });
-
   },
   google: function (req, token, refreshToken, profile, done) {
-
-    // Asynchronous 
+    // Async: let the machine do its stuff. 
     process.nextTick(function () {
-
       // Check if the user is already logged in
       if (!req.user) {
 
         User.findOne({ 'google.id': profile.id }, function (err, user) {
-          if (err)
-            return done(err);
-
+          if (err) return done(err);
+          // If there is a user id already but no token (user was linked at one point and then removed)
           if (user) {
-
-            // If there is a user id already but no token (user was linked at one point and then removed)
             if (!user.google.token) {
               user.google.token = token;
               user.google.name = profile.displayName;
               user.google.email = profile.emails[0].value; // pull the first email
-
               user.save(function (err) {
                 if (err)
                   throw err;
                 return;
               });
             }
-
             return done(null, user); // Here is where the user must be returned.
           }
           let newUser = new User();
